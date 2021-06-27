@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "babydogecoinbot"
+version = "0.1.0"
+description = ""
+authors = ["Deathwing4528"]
+
+[tool.poetry.dependencies]
+python = "^3.7.9"
+discord = "^1.0.1"
+python-dotenv = "^0.15.0"
+bscscan-python = "^2.0.0"
+python-coinmarketcap = "^0.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
