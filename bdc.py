@@ -28,6 +28,7 @@ class BabyDogeCoinBot(discord.Client):
         intents.reactions = True
         super().__init__(intents=intents)
         self.initialized = False
+        self.loop.create_task(self.update_pricing_info_task())
 
     async def on_ready(self):
         if self.initialized:
@@ -40,6 +41,16 @@ class BabyDogeCoinBot(discord.Client):
         self.cmc = CoinMarketCapAPI(self.cmc_key)
 
         self.initialized = True
+
+    async def update_pricing_info_task(self):
+        await self.wait_until_ready()
+
+        while not hasattr(self, 'cmc'):
+            await asyncio.sleep(1)
+
+        while not self.is_closed():
+            self.pricing_info = await self.update_pricing_info()
+            await asyncio.sleep(30)
 
     async def on_message(self, message):
         if message.author == client.user:
@@ -56,21 +67,20 @@ class BabyDogeCoinBot(discord.Client):
         response = None
 
         if msg.startswith("$babydogecoin help"):
-            response = self.hanlde_help()
+            response = self.handle_help()
         elif msg.startswith("$babydogecoin price"):
-            response = await self.handle_price()
+            response = self.pricing_info
 
         return response
 
-    def hanlde_help(self):
+    def handle_help(self):
         response = f"Baby Doge Coin Bot (Version: {get_version()})"
 
         response += "\n$babydogecoin price - Returns the current pricing information"
 
         return response
 
-    # Role registration
-    async def handle_price(self):
+    async def update_pricing_info(self):
         try:
             cmc_data = self.cmc.cryptocurrency_quotes_latest(id=BABY_DOGE_COIN_ID).data
             baby_doge_coin_quota = cmc_data[str(BABY_DOGE_COIN_ID)]
@@ -85,6 +95,7 @@ class BabyDogeCoinBot(discord.Client):
                 burn = float(burn_raw) / BABY_DOGE_COIN_DECIMALS
                 burn_percentage = burn / supply
                 burn_value = burn * price
+                market_cap_after_burn = market_cap - burn_value
 
             response = f"1 {BABY_DOGE_COIN_SYMBOL} = {'{:0,.12f}'.format(price)} USD"
             
@@ -127,9 +138,9 @@ class BabyDogeCoinBot(discord.Client):
                 response += f"\n{values}"
 
             response += f"\n"
-            response += f"\n:moneybag:MarketCap: ${'{:0,.2f}'.format(market_cap)} :moneybag:"
+            response += f"\n:moneybag:MarketCap: ${'{:0,.2f}'.format(market_cap_after_burn)} :moneybag:"
             response += f"\n"
-            response += f"\n:fire:Burned: {'{:0,.2f}'.format(burn)} | {'{:0,.2f}'.format(burn_percentage * 100)}% | ${'{:0,.2f}'.format(burn_value)} :fire:"
+            response += f"\n:fire:Burned: {'{:0,.2f}'.format(burn)} | {'{:0,.2f}'.format(burn_percentage * 100)}% :fire:"
             response += f"\n"
             response += f"\n*data last updated at: {last_updated}"
 
