@@ -1,34 +1,45 @@
 import os
 import pathlib
-import asyncio
-
-from bscscan import BscScan
-
-from coinmarketcapapi import CoinMarketCapAPI, CoinMarketCapAPIError
-
-from datetime import datetime
+from datetime import datetime, timedelta
+from enum import IntEnum
 
 import discord
-
+from bscscan import BscScan
+from coinmarketcapapi import CoinMarketCapAPI
 from dotenv import load_dotenv
 
 load_dotenv()
 
-BABY_DOGE_COIN_TOKEN = "0xc748673057861a797275cd8a068abb95a902e8de"
-BABY_DOGE_COIN_BURN_ADDRESS = "0x000000000000000000000000000000000000dead"
-BABY_DOGE_COIN_ID = 10407
-BABY_DOGE_COIN_SYMBOL = "BabyDoge"
-BABY_DOGE_COIN_DECIMALS = 1000000000
+class CryptoCurrency(IntEnum):
+    WBNB = 7192
+    BabyDoge = 10407
+
+    #This is not the correct Symbol, but we keep it for backward compatibility on discord :)
+    BabyDogeCoin = 10407
+
+CRYPTO_CURRENCY_REGISTER = {
+    CryptoCurrency.WBNB: {
+        "contract_address": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+        "burn_address": None,
+        "decimals": 1000000000000000000
+    },
+    CryptoCurrency.BabyDoge: {
+        "contract_address": "0xc748673057861a797275cd8a068abb95a902e8de",
+        "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000
+    }
+}
 
 class BabyDogeCoinBot(discord.Client):
     def __init__(self):
-        # intents to send messages to users
         intents = discord.Intents.default()
         intents.members = True
         intents.reactions = True
-        super().__init__(intents=intents)
+
         self.initialized = False
-        self.loop.create_task(self.update_pricing_info_task())
+        self.crypto_currency_cache = {}
+
+        super().__init__(intents=intents)
 
     async def on_ready(self):
         if self.initialized:
@@ -36,69 +47,63 @@ class BabyDogeCoinBot(discord.Client):
 
         print(f"{self.user.name} has connected to {self.guilds}!")
     
-        self.bsc_key = os.getenv("BSC_SCAN_API_KEY")
-        self.cmc_key = os.getenv("COIN_MARKET_CAP_API_KEY")
-        self.cmc = CoinMarketCapAPI(self.cmc_key)
+        self.bsc = BscScan(os.getenv("BSC_SCAN_API_KEY"))
+        self.cmc = CoinMarketCapAPI(os.getenv("COIN_MARKET_CAP_API_KEY"))
 
         self.initialized = True
 
-    async def update_pricing_info_task(self):
-        await self.wait_until_ready()
-
-        while not hasattr(self, 'cmc'):
-            await asyncio.sleep(1)
-
-        while not self.is_closed():
-            self.pricing_info = await self.update_pricing_info()
-            await asyncio.sleep(30)
-
     async def on_message(self, message):
-        if message.author == client.user:
-            return
-
-        msg = message.content.lower()
-        if msg.startswith("$"):
-            response = await self.handle_command(msg, message)
+        if message.author != self.user and message.content.startswith("$"):
+            response = await self.handle_command(message)
             if response is not None:
                 await message.channel.send(f"{response}")
-            return
 
-    async def handle_command(self, msg, full_message):
-        response = None
+    async def handle_command(self, message):
+        lower_content = message.content.lower()
+        if lower_content.startswith("$babydogecoin help"):
+            return self.get_help_string()
 
-        if msg.startswith("$babydogecoin help"):
-            response = self.handle_help()
-        elif msg.startswith("$babydogecoin price"):
-            response = self.pricing_info
+        for crypto_currency_name, crypto_currency in CryptoCurrency.__members__.items():
+            if lower_content.startswith(f"${crypto_currency_name.lower()} price"):
+                return await self.get_crypto_currency_price_string(crypto_currency)
 
-        return response
+            if lower_content.startswith(f"${crypto_currency_name.lower()} balance"):
+                splitted_content = message.content.split()
+                if len(splitted_content) != 3:
+                    return f"Incorrect syntax. Usage: ${crypto_currency_name.lower()} balance <address>"
 
-    def handle_help(self):
+                address = splitted_content[2]
+                return await self.get_crypto_currency_balance_string(crypto_currency, address)
+
+        return None
+
+    def get_help_string(self):
         response = f"Baby Doge Coin Bot (Version: {get_version()})"
 
         response += "\n$babydogecoin price - Returns the current pricing information"
+        response += "\n$babydogecoin balance <address> - Returns the current token balance for a specific address"
 
         return response
 
-    async def update_pricing_info(self):
+    async def get_crypto_currency_price_string(self, crypto_currency):
         try:
-            cmc_data = self.cmc.cryptocurrency_quotes_latest(id=BABY_DOGE_COIN_ID).data
-            baby_doge_coin_quota = cmc_data[str(BABY_DOGE_COIN_ID)]
-            supply = baby_doge_coin_quota["total_supply"]
-            usd_quota = baby_doge_coin_quota["quote"]["USD"]
+            data = await self.get_crypto_currency_data(crypto_currency)
+            supply = data["total_supply"]
+            usd_quota = data["quote"]["USD"]
             price = usd_quota["price"]
             market_cap = supply * price
-            last_updated = baby_doge_coin_quota["last_updated"]
+            last_updated = data["last_updated"]
 
-            async with BscScan(self.bsc_key) as bsc:
-                burn_raw = float(await bsc.get_acc_balance_by_token_contract_address(contract_address=BABY_DOGE_COIN_TOKEN, address=BABY_DOGE_COIN_BURN_ADDRESS))
-                burn = float(burn_raw) / BABY_DOGE_COIN_DECIMALS
-                burn_percentage = burn / supply
-                burn_value = burn * price
-                market_cap_after_burn = market_cap - burn_value
+            has_burn_data = False
+            if CRYPTO_CURRENCY_REGISTER[crypto_currency]["burn_address"] is not None:
+                burn_balance = await self.get_crypto_currency_balance(crypto_currency, CRYPTO_CURRENCY_REGISTER[crypto_currency]["burn_address"])
+                burn_percentage = burn_balance / supply
+                burn_value = burn_balance * price
+                market_cap -= burn_value
+                has_burn_data = True
 
-            response = f"1 {BABY_DOGE_COIN_SYMBOL} = {'{:0,.12f}'.format(price)} USD"
-            
+            response = f"1 {data['symbol']} = {'{:0,.12f}'.format(price)} USD"
+
             intervals = ""
             values = ""
             for key in usd_quota:
@@ -138,26 +143,67 @@ class BabyDogeCoinBot(discord.Client):
                 response += f"\n{values}"
 
             response += f"\n"
-            response += f"\n:moneybag:MarketCap: ${'{:0,.2f}'.format(market_cap_after_burn)} :moneybag:"
-            response += f"\n"
-            response += f"\n:fire:Burned: {'{:0,.2f}'.format(burn)} | {'{:0,.2f}'.format(burn_percentage * 100)}% :fire:"
+            response += f"\n:moneybag:MarketCap: ${'{:0,.2f}'.format(market_cap)} :moneybag:"
+            if has_burn_data:
+                response += f"\n"
+                response += f"\n:fire:Burned: {'{:0,.2f}'.format(burn_balance)} | {'{:0,.2f}'.format(burn_percentage * 100)}% :fire:"
             response += f"\n"
             response += f"\n*data last updated at: {last_updated}"
 
             return response
         except Exception as ex:
             print (ex)
-            return "Something went wrong. Please try again later."
+            return f"Something went wrong."
+
+    async def get_crypto_currency_balance_string(self, crypto_currency, address):
+        try:
+            data = await self.get_crypto_currency_data(crypto_currency)
+            balance = await self.get_crypto_currency_balance(crypto_currency, address)
+            balance_in_usd = data["quote"]["USD"]["price"] * balance
+
+            response = f"The address {address} has:"
+            response += f"\n{balance:0,.12f} {data['symbol']} (${balance_in_usd:0,.2f})"
+            if address == CRYPTO_CURRENCY_REGISTER[crypto_currency]["burn_address"]:
+                response += f"\n:fire: This address is the official burn address :fire:"
+
+            return response
+        except Exception as ex:
+            print (ex)
+            return f"Something went wrong. Is the address correct?"
+
+    async def get_crypto_currency_data(self, crypto_currency):
+        if not crypto_currency in CRYPTO_CURRENCY_REGISTER:
+            raise Exception(f"The crypto currency {crypto_currency} is not yet supported.")
+
+        if crypto_currency in self.crypto_currency_cache:
+            cache = self.crypto_currency_cache[crypto_currency]
+            if (cache["last_cached_at"] + timedelta(seconds=60) > datetime.utcnow()):
+                return cache
+
+        id = int(crypto_currency)
+        data = self.cmc.cryptocurrency_quotes_latest(id=id).data[str(id)]
+        data["last_cached_at"] = datetime.utcnow()
+
+        self.crypto_currency_cache[crypto_currency] = data
+        return data
+
+    async def get_crypto_currency_balance(self, crypto_currency, address):
+        if not crypto_currency in CRYPTO_CURRENCY_REGISTER:
+            raise Exception(f"The crypto currency {crypto_currency} is not yet supported.")
+
+        contract_address = CRYPTO_CURRENCY_REGISTER[crypto_currency]["contract_address"]
+        async with self.bsc as bsc:
+            balance = await bsc.get_acc_balance_by_token_contract_address(contract_address=contract_address, address=address)
+            return float(balance) / CRYPTO_CURRENCY_REGISTER[crypto_currency]["decimals"]
 
 def get_version():
-    fname = pathlib.Path(__file__)
-    if fname.exists():
-        mtime = datetime.fromtimestamp(fname.stat().st_mtime)
-        return mtime.strftime("%Y-%m-%d %H:%M")
-    else:
-        return "?"
+    file_name = pathlib.Path(__file__)
+    if file_name.exists():
+        modification_time = datetime.fromtimestamp(file_name.stat().st_mtime)
+        return modification_time.strftime("%Y-%m-%d %H:%M")
+
+    return "?"
 
 if __name__ == "__main__":
-    token = os.getenv("DISCORD_TOKEN")
     client = BabyDogeCoinBot()
-    client.run(token)
+    client.run(os.getenv("DISCORD_TOKEN"))
