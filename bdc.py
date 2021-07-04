@@ -6,6 +6,7 @@ from enum import IntEnum
 import discord
 from bscscan import BscScan
 from coinmarketcapapi import CoinMarketCapAPI
+from currency_converter import CurrencyConverter
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -49,6 +50,7 @@ class BabyDogeCoinBot(discord.Client):
     
         self.bsc = BscScan(os.getenv("BSC_SCAN_API_KEY"))
         self.cmc = CoinMarketCapAPI(os.getenv("COIN_MARKET_CAP_API_KEY"))
+        self.cc = CurrencyConverter()
 
         self.initialized = True
 
@@ -90,19 +92,26 @@ class BabyDogeCoinBot(discord.Client):
             data = await self.get_crypto_currency_data(crypto_currency)
             supply = data["total_supply"]
             usd_quota = data["quote"]["USD"]
-            price = usd_quota["price"]
-            market_cap = supply * price
+            usd_price = usd_quota["price"]
+            eur_quota = data["quote"]["EUR"]
+            eur_price = eur_quota["price"]
+            usd_market_cap = supply * usd_price
             last_updated = data["last_updated"]
 
             has_burn_data = False
             if CRYPTO_CURRENCY_REGISTER[crypto_currency]["burn_address"] is not None:
                 burn_balance = await self.get_crypto_currency_balance(crypto_currency, CRYPTO_CURRENCY_REGISTER[crypto_currency]["burn_address"])
                 burn_percentage = burn_balance / supply
-                burn_value = burn_balance * price
-                market_cap -= burn_value
+                usd_burn_value = burn_balance * usd_price
+                usd_market_cap -= usd_burn_value
                 has_burn_data = True
 
-            response = f"1 {data['symbol']} = {'{:0,.12f}'.format(price)} USD"
+            response = "Price (CoinMarketCap):"
+            if crypto_currency == CryptoCurrency.BabyDoge:
+                response += f"\n1B {data['symbol']} = {'{:0,.3f}'.format(usd_price * 1000000000)} USD | {'{:0,.3f}'.format(eur_price * 1000000000)} EUR"
+                response += f"\n1T {data['symbol']} = {'{:0,.0f}'.format(usd_price * 1000000000000)} USD | {'{:0,.0f}'.format(eur_price * 1000000000000)} EUR"
+            else:
+                response += f"\n1 {data['symbol']} = {'{:0,.3f}'.format(usd_price)} USD | {'{:0,.3f}'.format(eur_price)} EUR"
 
             intervals = ""
             values = ""
@@ -143,7 +152,7 @@ class BabyDogeCoinBot(discord.Client):
                 response += f"\n{values}"
 
             response += f"\n"
-            response += f"\n:moneybag:MarketCap: ${'{:0,.2f}'.format(market_cap)} :moneybag:"
+            response += f"\n:moneybag:MarketCap: **${'{:0,.2f}'.format(usd_market_cap)}** :moneybag:"
             if has_burn_data:
                 response += f"\n"
                 response += f"\n:fire:Burned: {'{:0,.2f}'.format(burn_balance)} | {'{:0,.2f}'.format(burn_percentage * 100)}% :fire:"
@@ -160,9 +169,10 @@ class BabyDogeCoinBot(discord.Client):
             data = await self.get_crypto_currency_data(crypto_currency)
             balance = await self.get_crypto_currency_balance(crypto_currency, address)
             balance_in_usd = data["quote"]["USD"]["price"] * balance
+            balance_in_eur = data["quote"]["EUR"]["price"] * balance
 
             response = f"The address {address} has:"
-            response += f"\n{balance:0,.12f} {data['symbol']} (${balance_in_usd:0,.2f})"
+            response += f"\n{balance:0,.12f} {data['symbol']} (${balance_in_usd:0,.2f} | {balance_in_eur:0,.2f}€)"
             if address == CRYPTO_CURRENCY_REGISTER[crypto_currency]["burn_address"]:
                 response += f"\n:fire: This address is the official burn address :fire:"
 
@@ -182,6 +192,9 @@ class BabyDogeCoinBot(discord.Client):
 
         id = int(crypto_currency)
         data = self.cmc.cryptocurrency_quotes_latest(id=id).data[str(id)]
+        data["quote"]["EUR"] = {
+            "price": data["quote"]["USD"]["price"] * self.cc.convert(1, 'USD', 'EUR')
+        }
         data["last_cached_at"] = datetime.utcnow()
 
         self.crypto_currency_cache[crypto_currency] = data
