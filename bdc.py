@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-#BABY_DOGE_ROLE_NAME = "Baby Doge"
+BABY_DOGE_ROLE_NAME = "Baby Doge"
 
 class CryptoCurrency(IntEnum):
     WBNB = 7192
@@ -50,15 +50,15 @@ class BabyDogeCoinBot(discord.Client):
 
         print(f"{self.user.name} has connected to {self.guilds}!")
 
-#        for guild in self.guilds:
-#            baby_doge_role = discord.utils.get(guild.roles, name=BABY_DOGE_ROLE_NAME)
-#            if baby_doge_role is not None:
-#                added_baby_doge_roles = 0
-#                for member in guild.members:
-#                    if not member.bot and baby_doge_role not in member.roles:
-#                        await member.add_roles(baby_doge_role)
-#                        added_baby_doge_roles += 1
-#                print(f"Added {baby_doge_role} to {added_baby_doge_roles} members of {guild}")
+        for guild in self.guilds:
+            baby_doge_role = discord.utils.get(guild.roles, name=BABY_DOGE_ROLE_NAME)
+            if baby_doge_role is not None:
+                added_baby_doge_roles = 0
+                for member in guild.members:
+                    if not member.bot and baby_doge_role not in member.roles:
+                        await member.add_roles(baby_doge_role)
+                        added_baby_doge_roles += 1
+                print(f"Added {baby_doge_role} to {added_baby_doge_roles} members of {guild}")
     
         self.bsc = BscScan(os.getenv("BSC_SCAN_API_KEY"))
         self.cmc = CoinMarketCapAPI(os.getenv("COIN_MARKET_CAP_API_KEY"))
@@ -66,11 +66,11 @@ class BabyDogeCoinBot(discord.Client):
 
         self.initialized = True
 
-#    async def on_member_join(self, member):
-#        if not member.bot:
-#            baby_doge_role = discord.utils.get(member.guild.roles, name=BABY_DOGE_ROLE_NAME)
-#            if baby_doge_role is not None:
-#                await member.add_roles(baby_doge_role)
+    async def on_member_join(self, member):
+        if not member.bot:
+            baby_doge_role = discord.utils.get(member.guild.roles, name=BABY_DOGE_ROLE_NAME)
+            if baby_doge_role is not None:
+                await member.add_roles(baby_doge_role)
 
     async def on_message(self, message):
         if message.author != self.user and message.content.startswith("$"):
