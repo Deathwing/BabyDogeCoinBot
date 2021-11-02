@@ -13,31 +13,60 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class CryptoCurrency(IntEnum):
+    DOGE = 74
+    SHIB = 5994
     WBNB = 7192
+    CATGIRL = 10275
     BabyDoge = 10407
+    GENIUS = 10948
 
     #This is not the correct Symbol, but we keep it for backward compatibility on discord :)
     BabyDogeCoin = 10407
 
     #They are not yet the correct Symbols, as long as they are not on CoinMarketCap
     BUDZ = 9876543210
-    Rot = 9876543211
+    #Rot = 9876543211
     KLAYME = 9876543212
+    Pot = 9876543213
 
 class PriceSource(IntEnum):
     CoinMarketCap = 0
     PancakeSwap = 1
 
 CRYPTO_CURRENCY_REGISTER = {
+    CryptoCurrency.DOGE: {
+        "contract_address": "0xba2ae424d960c26247dd6c32edc70b295c744c43",
+        "burn_address": None,
+        "decimals": 100000000,
+        "use_big_numbers": False
+    },
+    CryptoCurrency.SHIB: {
+        "contract_address": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
+        "burn_address": "0xdead000000000000000042069420694206942069",
+        "decimals": 1000000000000000000,
+        "use_big_numbers": True
+    },
     CryptoCurrency.WBNB: {
         "contract_address": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
         "burn_address": None,
         "decimals": 1000000000000000000,
         "use_big_numbers": False
     },
+    CryptoCurrency.CATGIRL: {
+        "contract_address": "0x79ebc9a2ce02277a4b5b3a768b1c0a4ed75bd936",
+        "burn_address": "0x79ebc9a2ce02277a4b5b3a768b1c0a4ed75bd936",
+        "decimals": 1000000000,
+        "use_big_numbers": True
+    },
     CryptoCurrency.BabyDoge: {
         "contract_address": "0xc748673057861a797275cd8a068abb95a902e8de",
         "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000,
+        "use_big_numbers": True
+    },
+    CryptoCurrency.GENIUS: {
+        "contract_address": "0xbA5b0408B0645ec091B3bB76Ee793091A9399BF2",
+        "burn_address": "0x0000000000000000000000000000000000001001",
         "decimals": 1000000000,
         "use_big_numbers": True
     },
@@ -48,20 +77,27 @@ CRYPTO_CURRENCY_REGISTER = {
         "use_big_numbers": True,
         "supply": 420000000000000
     },
-    CryptoCurrency.Rot: {
-        "contract_address": "0x02b14a7664834e349b9399b64ebd003df1a7470a",
-        "burn_address": "0x000000000000000000000000000000000000dead",
-        "decimals": 1000000000000000000,
-        "use_big_numbers": True,
-        "supply": 1500000000000000
-    },
+    # CryptoCurrency.Rot: {
+    #     "contract_address": "0x02b14a7664834e349b9399b64ebd003df1a7470a",
+    #     "burn_address": "0x000000000000000000000000000000000000dead",
+    #     "decimals": 1000000000000000000,
+    #     "use_big_numbers": True,
+    #     "supply": 1500000000000000
+    # },
     CryptoCurrency.KLAYME: {
         "contract_address": "0x1095ea8f7a8a5a5809d99cbc773ade5d879c2f53",
         "burn_address": "0x000000000000000000000000000000000000dead",
         "decimals": 1000000000,
         "use_big_numbers": False,
         "supply": 100000000000
-    }
+    },
+    CryptoCurrency.Pot: {
+        "contract_address": "0xc93d3b5211ca2520fcc7167c067c0c15c3b9302c",
+        "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000000000000,
+        "use_big_numbers": True,
+        "supply": 1500000000000000
+    },
 }
 
 class CoinPriceBot(discord.Client):
