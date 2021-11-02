@@ -19,6 +19,7 @@ class CryptoCurrency(IntEnum):
     CATGIRL = 10275
     BabyDoge = 10407
     GENIUS = 10948
+    FINU = 13648
 
     #This is not the correct Symbol, but we keep it for backward compatibility on discord :)
     BabyDogeCoin = 10407
@@ -67,6 +68,12 @@ CRYPTO_CURRENCY_REGISTER = {
     CryptoCurrency.GENIUS: {
         "contract_address": "0xbA5b0408B0645ec091B3bB76Ee793091A9399BF2",
         "burn_address": "0x0000000000000000000000000000000000001001",
+        "decimals": 1000000000,
+        "use_big_numbers": True
+    },
+    CryptoCurrency.FINU: {
+        "contract_address": "0x1bdc5e5aa2749b4934c33441e050b8854b77a331",
+        "burn_address": None,
         "decimals": 1000000000,
         "use_big_numbers": True
     },
