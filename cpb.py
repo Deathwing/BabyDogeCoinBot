@@ -26,9 +26,11 @@ class CryptoCurrency(IntEnum):
 
     #They are not yet the correct Symbols, as long as they are not on CoinMarketCap
     BUDZ = 9876543210
-    #Rot = 9876543211
+    Rot = 9876543211
     KLAYME = 9876543212
     Pot = 9876543213
+    KIBA = 9876543214
+    BabyFloki = 9876543215
 
 class PriceSource(IntEnum):
     CoinMarketCap = 0
@@ -84,17 +86,17 @@ CRYPTO_CURRENCY_REGISTER = {
         "use_big_numbers": True,
         "supply": 420000000000000
     },
-    # CryptoCurrency.Rot: {
-    #     "contract_address": "0x02b14a7664834e349b9399b64ebd003df1a7470a",
-    #     "burn_address": "0x000000000000000000000000000000000000dead",
-    #     "decimals": 1000000000000000000,
-    #     "use_big_numbers": True,
-    #     "supply": 1500000000000000
-    # },
-    CryptoCurrency.KLAYME: {
-        "contract_address": "0x1095ea8f7a8a5a5809d99cbc773ade5d879c2f53",
+    CryptoCurrency.Rot: {
+        "contract_address": "0x673eecccaf421ffab07b1c1ab977498e8636bab5",
         "burn_address": "0x000000000000000000000000000000000000dead",
-        "decimals": 1000000000,
+        "decimals": 1000000000000000000,
+        "use_big_numbers": True,
+        "supply": 1500000000000000
+    },
+    CryptoCurrency.KLAYME: {
+        "contract_address": "0xf04eb304ff001b27b04770d4460250ad75970219",
+        "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000000000000,
         "use_big_numbers": False,
         "supply": 100000000000
     },
@@ -104,6 +106,20 @@ CRYPTO_CURRENCY_REGISTER = {
         "decimals": 1000000000000000000,
         "use_big_numbers": True,
         "supply": 1500000000000000
+    },
+    CryptoCurrency.KIBA: {
+        "contract_address": "0x31d3778a7ac0d98c4aaa347d8b6eaf7977448341",
+        "burn_address": None,
+        "decimals": 1000000000,
+        "use_big_numbers": True,
+        "supply": 1000000000000
+    },
+    CryptoCurrency.BabyFloki: {
+        "contract_address": "0x71e80e96af604afc23ca2aed4c1c7466db6dd0c4",
+        "burn_address": None,
+        "decimals": 1000000000,
+        "use_big_numbers": True,
+        "supply": 1000000000000000
     },
 }
 
