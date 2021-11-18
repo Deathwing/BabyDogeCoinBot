@@ -1,3 +1,4 @@
+import json
 import os
 import pathlib
 from datetime import datetime, timedelta
@@ -12,116 +13,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class CryptoCurrency(IntEnum):
-    DOGE = 74
-    SHIB = 5994
-    WBNB = 7192
-    CATGIRL = 10275
-    BabyDoge = 10407
-    GENIUS = 10948
-    FINU = 13648
-
-    #This is not the correct Symbol, but we keep it for backward compatibility on discord :)
-    BabyDogeCoin = 10407
-
-    #They are not yet the correct Symbols, as long as they are not on CoinMarketCap
-    BUDZ = 9876543210
-    Rot = 9876543211
-    KLAYME = 9876543212
-    Pot = 9876543213
-    KIBA = 9876543214
-    BabyFloki = 9876543215
-
 class PriceSource(IntEnum):
     CoinMarketCap = 0
     PancakeSwap = 1
-
-CRYPTO_CURRENCY_REGISTER = {
-    CryptoCurrency.DOGE: {
-        "contract_address": "0xba2ae424d960c26247dd6c32edc70b295c744c43",
-        "burn_address": None,
-        "decimals": 100000000,
-        "use_big_numbers": False
-    },
-    CryptoCurrency.SHIB: {
-        "contract_address": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
-        "burn_address": "0xdead000000000000000042069420694206942069",
-        "decimals": 1000000000000000000,
-        "use_big_numbers": True
-    },
-    CryptoCurrency.WBNB: {
-        "contract_address": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-        "burn_address": None,
-        "decimals": 1000000000000000000,
-        "use_big_numbers": False
-    },
-    CryptoCurrency.CATGIRL: {
-        "contract_address": "0x79ebc9a2ce02277a4b5b3a768b1c0a4ed75bd936",
-        "burn_address": "0x79ebc9a2ce02277a4b5b3a768b1c0a4ed75bd936",
-        "decimals": 1000000000,
-        "use_big_numbers": True
-    },
-    CryptoCurrency.BabyDoge: {
-        "contract_address": "0xc748673057861a797275cd8a068abb95a902e8de",
-        "burn_address": "0x000000000000000000000000000000000000dead",
-        "decimals": 1000000000,
-        "use_big_numbers": True
-    },
-    CryptoCurrency.GENIUS: {
-        "contract_address": "0xbA5b0408B0645ec091B3bB76Ee793091A9399BF2",
-        "burn_address": "0x0000000000000000000000000000000000001001",
-        "decimals": 1000000000,
-        "use_big_numbers": True
-    },
-    CryptoCurrency.FINU: {
-        "contract_address": "0x1bdc5e5aa2749b4934c33441e050b8854b77a331",
-        "burn_address": None,
-        "decimals": 1000000000,
-        "use_big_numbers": True
-    },
-    CryptoCurrency.BUDZ: {
-        "contract_address": "0xF77fAf32cb0e92AA3e3b4f6d1f2a251A9a1f4853",
-        "burn_address": "0x0000000000000000000000000000000000000000",
-        "decimals": 1000000000000000000,
-        "use_big_numbers": True,
-        "supply": 420000000000000
-    },
-    CryptoCurrency.Rot: {
-        "contract_address": "0x673eecccaf421ffab07b1c1ab977498e8636bab5",
-        "burn_address": "0x000000000000000000000000000000000000dead",
-        "decimals": 1000000000000000000,
-        "use_big_numbers": True,
-        "supply": 1500000000000000
-    },
-    CryptoCurrency.KLAYME: {
-        "contract_address": "0xf04eb304ff001b27b04770d4460250ad75970219",
-        "burn_address": "0x000000000000000000000000000000000000dead",
-        "decimals": 1000000000000000000,
-        "use_big_numbers": False,
-        "supply": 100000000000
-    },
-    CryptoCurrency.Pot: {
-        "contract_address": "0xc93d3b5211ca2520fcc7167c067c0c15c3b9302c",
-        "burn_address": "0x000000000000000000000000000000000000dead",
-        "decimals": 1000000000000000000,
-        "use_big_numbers": True,
-        "supply": 1500000000000000
-    },
-    CryptoCurrency.KIBA: {
-        "contract_address": "0x31d3778a7ac0d98c4aaa347d8b6eaf7977448341",
-        "burn_address": None,
-        "decimals": 1000000000,
-        "use_big_numbers": True,
-        "supply": 1000000000000
-    },
-    CryptoCurrency.BabyFloki: {
-        "contract_address": "0x71e80e96af604afc23ca2aed4c1c7466db6dd0c4",
-        "burn_address": None,
-        "decimals": 1000000000,
-        "use_big_numbers": True,
-        "supply": 1000000000000000
-    },
-}
 
 class CoinPriceBot(discord.Client):
     def __init__(self):
@@ -131,6 +25,9 @@ class CoinPriceBot(discord.Client):
 
         self.initialized = False
         self.crypto_currency_cache = {}
+
+        with open("ccr.json") as ccr_json_file:
+            self.crypto_currency_register = json.load(ccr_json_file)
 
         super().__init__(intents=intents)
 
@@ -148,24 +45,68 @@ class CoinPriceBot(discord.Client):
         self.initialized = True
 
     async def on_message(self, message):
-        if message.author != self.user and message.content.startswith("$"):
+        if message.author != self.user and (message.content.startswith("#") or message.content.startswith("$")):
             response = await self.handle_command(message)
             if response is not None:
                 await message.channel.send(f"{response}")
 
     async def handle_command(self, message):
         lower_content = message.content.lower()
+        if message.author.id == 231183500559122432:
+            if lower_content.startswith("#remove ccr"):
+                splitted_content = message.content.split()
+                if len(splitted_content) != 3:
+                    return f"Incorrect syntax. Usage: #remove ccr <symbol>"
+
+                symbol = splitted_content[2]
+                if symbol not in self.crypto_currency_register:
+                    return f"{symbol} hasn't been removed as it wasn't even present."
+
+                del self.crypto_currency_register[symbol]
+                with open("ccr.json", "w") as ccr_json_file:
+                    json.dump(self.crypto_currency_register, ccr_json_file, indent = 4) 
+                return f"{symbol} has been removed."
+
+            if lower_content.startswith("#update ccr"):
+                splitted_content = message.content.split()
+                if len(splitted_content) < 8 or len(splitted_content) > 9:
+                    return f"Incorrect syntax. Usage: #update ccr <symbol> <id> <contract_address> <burn_address> <decimals> <use_big_numbers> [<supply>]"
+
+                symbol = splitted_content[2]
+                id = int(splitted_content[3])
+                contract_address = splitted_content[4]
+                burn_address = None if splitted_content[5] == "null" else splitted_content[5]
+                decimals =  int(splitted_content[6])
+                use_big_numbers = True if splitted_content[7] == "true" else False
+                if len(splitted_content) == 9:
+                    supply = splitted_content[8]
+
+                self.crypto_currency_register[symbol] = {
+                    "id": id,
+                    "contract_address": contract_address,
+                    "burn_address": burn_address,
+                    "decimals": decimals,
+                    "use_big_numbers": use_big_numbers,
+                }
+                if len(splitted_content) == 9:
+                    self.crypto_currency_register[symbol]["supply"] = supply
+
+                with open("ccr.json", "w") as ccr_json_file:
+                    json.dump(self.crypto_currency_register, ccr_json_file, indent = 4) 
+
+                return f"{symbol} has been updated."
+
         if lower_content.startswith("$coinpricebot help"):
             return self.get_help_string()
 
-        for crypto_currency_name, crypto_currency in CryptoCurrency.__members__.items():
-            if lower_content.startswith(f"${crypto_currency_name.lower()} price"):
+        for crypto_currency in self.crypto_currency_register:
+            if lower_content.startswith(f"${crypto_currency.lower()} price"):
                 return await self.get_crypto_currency_price_string(crypto_currency)
 
-            if lower_content.startswith(f"${crypto_currency_name.lower()} balance"):
+            if lower_content.startswith(f"${crypto_currency.lower()} balance"):
                 splitted_content = message.content.split()
                 if len(splitted_content) != 3:
-                    return f"Incorrect syntax. Usage: ${crypto_currency_name.lower()} balance <address>"
+                    return f"Incorrect syntax. Usage: ${crypto_currency.lower()} balance <address>"
 
                 address = splitted_content[2]
                 return await self.get_crypto_currency_balance_string(crypto_currency, address)
@@ -193,15 +134,15 @@ class CoinPriceBot(discord.Client):
             last_updated = data["last_updated"]
 
             has_burn_data = False
-            if CRYPTO_CURRENCY_REGISTER[crypto_currency]["burn_address"] is not None:
-                burn_balance = await self.get_crypto_currency_balance(crypto_currency, CRYPTO_CURRENCY_REGISTER[crypto_currency]["burn_address"])
+            if self.crypto_currency_register[crypto_currency]["burn_address"] is not None:
+                burn_balance = await self.get_crypto_currency_balance(crypto_currency, self.crypto_currency_register[crypto_currency]["burn_address"])
                 burn_percentage = burn_balance / supply
                 usd_burn_value = burn_balance * usd_price
                 usd_market_cap -= usd_burn_value
                 has_burn_data = True
 
             response = "Price (" + str(data["price_source"]) + "):"
-            if CRYPTO_CURRENCY_REGISTER[crypto_currency]["use_big_numbers"]:
+            if self.crypto_currency_register[crypto_currency]["use_big_numbers"]:
                 response += f"\n1B {symbol} = {'{:0,.3f}'.format(usd_price * 1000000000)} USD | {'{:0,.3f}'.format(eur_price * 1000000000)} EUR"
                 response += f"\n1T {symbol} = {'{:0,.0f}'.format(usd_price * 1000000000000)} USD | {'{:0,.0f}'.format(eur_price * 1000000000000)} EUR"
             else:
@@ -268,7 +209,7 @@ class CoinPriceBot(discord.Client):
 
             response = f"The address {address} has:"
             response += f"\n{balance:0,.12f} {symbol} (${balance_in_usd:0,.2f} | {balance_in_eur:0,.2f}€)"
-            if address == CRYPTO_CURRENCY_REGISTER[crypto_currency]["burn_address"]:
+            if address == self.crypto_currency_register[crypto_currency]["burn_address"]:
                 response += f"\n:fire: This address is the official burn address :fire:"
 
             return response
@@ -277,7 +218,7 @@ class CoinPriceBot(discord.Client):
             return f"Something went wrong. Is the address correct?"
 
     async def get_crypto_currency_data(self, crypto_currency):
-        if not crypto_currency in CRYPTO_CURRENCY_REGISTER:
+        if not crypto_currency in self.crypto_currency_register:
             raise Exception(f"The crypto currency {crypto_currency} is not yet supported.")
 
         if crypto_currency in self.crypto_currency_cache:
@@ -285,20 +226,20 @@ class CoinPriceBot(discord.Client):
             if (cache["last_cached_at"] + timedelta(seconds=60) > datetime.utcnow()):
                 return cache
 
-        id = int(crypto_currency)
+        id = self.crypto_currency_register[crypto_currency]["id"]
         try:
             data = self.cmc.cryptocurrency_quotes_latest(id=id).data[str(id)]
             data["price_source"] = PriceSource.CoinMarketCap
         except Exception as ex:
             print (ex)
-            raw_data = self.ps.tokens(CRYPTO_CURRENCY_REGISTER[crypto_currency]["contract_address"])
+            raw_data = self.ps.tokens(self.crypto_currency_register[crypto_currency]["contract_address"])
             data = raw_data["data"]
             data["quote"] = {
                 "USD": {
                     "price": float(data["price"])
                 }
             }
-            data["total_supply"] = CRYPTO_CURRENCY_REGISTER[crypto_currency]["supply"]
+            data["total_supply"] = self.crypto_currency_register[crypto_currency]["supply"]
             data["last_updated"] = datetime.utcfromtimestamp(raw_data["updated_at"] / 1000).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             data["price_source"] = PriceSource.PancakeSwap
 
@@ -311,13 +252,13 @@ class CoinPriceBot(discord.Client):
         return data
 
     async def get_crypto_currency_balance(self, crypto_currency, address):
-        if not crypto_currency in CRYPTO_CURRENCY_REGISTER:
+        if not crypto_currency in self.crypto_currency_register:
             raise Exception(f"The crypto currency {crypto_currency} is not yet supported.")
 
-        contract_address = CRYPTO_CURRENCY_REGISTER[crypto_currency]["contract_address"]
+        contract_address = self.crypto_currency_register[crypto_currency]["contract_address"]
         async with self.bsc as bsc:
             balance = await bsc.get_acc_balance_by_token_contract_address(contract_address=contract_address, address=address)
-            return float(balance) / CRYPTO_CURRENCY_REGISTER[crypto_currency]["decimals"]
+            return float(balance) / self.crypto_currency_register[crypto_currency]["decimals"]
 
 def get_version():
     file_name = pathlib.Path(__file__)

@@ -1,0 +1,108 @@
+{
+    "DOGE": {
+        "id": 74,
+        "contract_address": "0xba2ae424d960c26247dd6c32edc70b295c744c43",
+        "burn_address": null,
+        "decimals": 100000000,
+        "use_big_numbers": false
+    },
+    "SHIB": {
+        "id": 5994,
+        "contract_address": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
+        "burn_address": "0xdead000000000000000042069420694206942069",
+        "decimals": 1000000000000000000,
+        "use_big_numbers": true
+    },
+    "WBNB": {
+        "id": 7192,
+        "contract_address": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+        "burn_address": null,
+        "decimals": 1000000000000000000,
+        "use_big_numbers": false
+    },
+    "CATGIRL": {
+        "id": 10275,
+        "contract_address": "0x79ebc9a2ce02277a4b5b3a768b1c0a4ed75bd936",
+        "burn_address": "0x79ebc9a2ce02277a4b5b3a768b1c0a4ed75bd936",
+        "decimals": 1000000000,
+        "use_big_numbers": true
+    },
+    "BabyDoge": {
+        "id": 10407,
+        "contract_address": "0xc748673057861a797275cd8a068abb95a902e8de",
+        "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000,
+        "use_big_numbers": true
+    },
+    "GENIUS": {
+        "id": 10948,
+        "contract_address": "0xbA5b0408B0645ec091B3bB76Ee793091A9399BF2",
+        "burn_address": "0x0000000000000000000000000000000000001001",
+        "decimals": 1000000000,
+        "use_big_numbers": true
+    },
+    "FINU": {
+        "id": 13648,
+        "contract_address": "0x1bdc5e5aa2749b4934c33441e050b8854b77a331",
+        "burn_address": null,
+        "decimals": 1000000000,
+        "use_big_numbers": true
+    },
+
+    "BabyDogeCoin": {
+        "id": 10407,
+        "contract_address": "0xc748673057861a797275cd8a068abb95a902e8de",
+        "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000,
+        "use_big_numbers": true
+    },
+
+    "BUDZ": {
+        "id": 9876543210,
+        "contract_address": "0xF77fAf32cb0e92AA3e3b4f6d1f2a251A9a1f4853",
+        "burn_address": "0x0000000000000000000000000000000000000000",
+        "decimals": 1000000000000000000,
+        "use_big_numbers": true,
+        "supply": 420000000000000
+    },
+    "Rot": {
+        "id": 9876543211,
+        "contract_address": "0x673eecccaf421ffab07b1c1ab977498e8636bab5",
+        "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000000000000,
+        "use_big_numbers": true,
+        "supply": 1500000000000000
+    },
+    "KLAYME": {
+        "id": 9876543212,
+        "contract_address": "0xf04eb304ff001b27b04770d4460250ad75970219",
+        "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000000000000,
+        "use_big_numbers": false,
+        "supply": 100000000000
+    },
+    "Pot": {
+        "id": 9876543213,
+        "contract_address": "0xc93d3b5211ca2520fcc7167c067c0c15c3b9302c",
+        "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000000000000,
+        "use_big_numbers": true,
+        "supply": 1500000000000000
+    },
+    "KIBA": {
+        "id": 9876543214,
+        "contract_address": "0x31d3778a7ac0d98c4aaa347d8b6eaf7977448341",
+        "burn_address": null,
+        "decimals": 1000000000,
+        "use_big_numbers": true,
+        "supply": 1000000000000
+    },
+    "BabyFloki": {
+        "id": 9876543215,
+        "contract_address": "0x71e80e96af604afc23ca2aed4c1c7466db6dd0c4",
+        "burn_address": null,
+        "decimals": 1000000000,
+        "use_big_numbers": true,
+        "supply": 1000000000000000
+    }
+}
