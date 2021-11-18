@@ -125,7 +125,7 @@ class CoinPriceBot(discord.Client):
         try:
             data = await self.get_crypto_currency_data(crypto_currency)
             symbol = data['symbol']
-            supply = data["total_supply"]
+            supply = data["max_supply"]
             usd_quota = data["quote"]["USD"]
             usd_price = usd_quota["price"]
             eur_quota = data["quote"]["EUR"]
@@ -196,7 +196,7 @@ class CoinPriceBot(discord.Client):
 
             return response
         except Exception as ex:
-            print (ex)
+            #print (ex)
             return f"Something went wrong."
 
     async def get_crypto_currency_balance_string(self, crypto_currency, address):
@@ -214,7 +214,7 @@ class CoinPriceBot(discord.Client):
 
             return response
         except Exception as ex:
-            print (ex)
+            #print (ex)
             return f"Something went wrong. Is the address correct?"
 
     async def get_crypto_currency_data(self, crypto_currency):
@@ -231,7 +231,7 @@ class CoinPriceBot(discord.Client):
             data = self.cmc.cryptocurrency_quotes_latest(id=id).data[str(id)]
             data["price_source"] = PriceSource.CoinMarketCap
         except Exception as ex:
-            print (ex)
+            #print (ex)
             raw_data = self.ps.tokens(self.crypto_currency_register[crypto_currency]["contract_address"])
             data = raw_data["data"]
             data["quote"] = {
@@ -239,7 +239,7 @@ class CoinPriceBot(discord.Client):
                     "price": float(data["price"])
                 }
             }
-            data["total_supply"] = self.crypto_currency_register[crypto_currency]["supply"]
+            data["max_supply"] = self.crypto_currency_register[crypto_currency]["supply"]
             data["last_updated"] = datetime.utcfromtimestamp(raw_data["updated_at"] / 1000).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             data["price_source"] = PriceSource.PancakeSwap
 

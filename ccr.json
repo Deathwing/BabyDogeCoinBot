@@ -104,5 +104,12 @@
         "decimals": 1000000000,
         "use_big_numbers": true,
         "supply": 1000000000000000
+    },
+    "CTB": {
+        "id": 14571,
+        "contract_address": "0xa0e7566d693d015b59f2fd0e7fd26a8ac5ca03de",
+        "burn_address": "0x000000000000000000000000000000000000dead",
+        "decimals": 1000000000000000000,
+        "use_big_numbers": true
     }
 }
